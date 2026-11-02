@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOBoT — AI-Integrated Autonomous Quadruped Robot | Live Telemetry</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #03040c;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .hud-box {
+      background: rgba(2, 6, 23, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-gradient-to-b from-[#04081c] via-[#020410] to-[#010106]">
+
+  <!-- Header -->
+  <header class="border-b border-cyan-500/20 bg-[#060c28]/80 backdrop-blur-xl sticky top-0 z-50 px-6 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+          <i class="fa-solid fa-robot text-white text-base"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-300 to-indigo-300 tracking-tight">NOBoT Quadruped</h1>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-mono">Edge AI v3.0</span>
+          </div>
+          <p class="text-[11px] text-gray-400">Autonomous Spider Quadrobot • OpenCV • YOLOv8 • Raspberry Pi 5</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span>TELEMETRY ONLINE</span>
+        </span>
+        <a href="https://github.com/MIHIR-1304/NOBoT" target="_blank" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-xs text-gray-200 transition-all font-semibold">
+          <i class="fa-brands fa-github text-sm"></i>
+          <span>GitHub Repo</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Telemetry Viewport -->
+  <main class="flex-1 max-w-7xl mx-auto w-full p-6 space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Live Vision Stream Simulation (YOLOv8 + OpenCV HUD) -->
+      <div class="lg:col-span-2 hud-box rounded-2xl p-5 flex flex-col space-y-4">
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-300">
+            <i class="fa-solid fa-eye text-cyan-400"></i>
+            <span>Edge AI Camera Feed (YOLOv8 Live Inference)</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs font-mono text-gray-400">
+            <span>FPS: <strong class="text-cyan-400">32.4</strong></span>
+            <span>Latency: <strong class="text-emerald-400">18ms</strong></span>
+          </div>
+        </div>
+
+        <!-- Canvas Simulated Vision -->
+        <div class="relative aspect-video w-full rounded-xl overflow-hidden bg-black/90 border border-cyan-500/30 flex items-center justify-center">
+          <canvas id="visionCanvas" width="640" height="360" class="w-full h-full object-cover"></canvas>
+
+          <!-- Cyberpunk HUD Crosshairs & telemetry overlay -->
+          <div class="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between text-xs font-mono text-cyan-400">
+            <div class="flex items-center justify-between">
+              <span>TARGET LOCK: ACQUIRED</span>
+              <span>CONFIDENCE: 98.4%</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span>GAIT: TROT_STABLE</span>
+              <span>TERRAIN: LEVEL_SURFACE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vision Controls -->
+        <div class="flex items-center justify-between pt-2">
+          <div class="flex items-center gap-2">
+            <button onclick="toggleHazard()" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-200 text-xs font-bold transition-all">
+              Toggle Obstacle
+            </button>
+            <button onclick="cycleGait()" class="px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-200 text-xs font-bold transition-all">
+              Cycle Gait (Trot/Wave/Crawl)
+            </button>
+          </div>
+          <span id="gaitLabel" class="text-xs font-mono text-purple-300 font-bold">CURRENT: DYNAMIC TROT</span>
+        </div>
+      </div>
+
+      <!-- Right Panel: Kinematics & IMU Telemetry -->
+      <div class="space-y-6">
+        <!-- Kinematics Card -->
+        <div class="hud-box rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">3-DOF Inverse Kinematics</span>
+            <i class="fa-solid fa-microchip text-cyan-400"></i>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400">Coxa Joint (&theta;1):</span>
+              <span id="coxaDeg" class="font-mono font-bold text-cyan-300">14.2&deg;</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400">Femur Joint (&theta;2):</span>
+              <span id="femurDeg" class="font-mono font-bold text-purple-300">48.6&deg;</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400">Tibia Joint (&theta;3):</span>
+              <span id="tibiaDeg" class="font-mono font-bold text-emerald-300">92.1&deg;</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sensor Fusion (IMU + Radar) -->
+        <div class="hud-box rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">Sensor Fusion (MPU6050)</span>
+            <i class="fa-solid fa-compass text-cyan-400"></i>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-center">
+            <div class="p-3 rounded-xl bg-white/[0.03] border border-white/5">
+              <span class="text-[10px] text-gray-400">Pitch Angle</span>
+              <p id="pitchDeg" class="text-lg font-mono font-bold text-cyan-300 mt-1">+1.2&deg;</p>
+            </div>
+            <div class="p-3 rounded-xl bg-white/[0.03] border border-white/5">
+              <span class="text-[10px] text-gray-400">Roll Angle</span>
+              <p id="rollDeg" class="text-lg font-mono font-bold text-purple-300 mt-1">-0.4&deg;</p>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-cyan-950/20 border border-cyan-500/20 flex items-center justify-between text-xs">
+            <span class="text-gray-400">Ultrasonic Distance:</span>
+            <span id="sonarDist" class="font-mono font-bold text-emerald-400">142 cm (Clear)</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("visionCanvas");
+    const ctx = canvas.getContext("2d");
+    let obstacleActive = true;
+    let gaits = ["DYNAMIC TROT", "WAVE GAIT", "CREEP CRAWL"];
+    let gaitIdx = 0;
+    let t = 0;
+
+    function renderSimulation() {
+      t += 0.05;
+      ctx.fillStyle = "#020412";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw grid horizon
+      ctx.strokeStyle = "rgba(6, 182, 212, 0.15)";
+      ctx.lineWidth = 1;
+      for (let y = 180; y < canvas.height; y += 20) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Draw Horizon Center line
+      ctx.strokeStyle = "rgba(168, 85, 247, 0.4)";
+      ctx.beginPath();
+      ctx.moveTo(0, 180);
+      ctx.lineTo(canvas.width, 180);
+      ctx.stroke();
+
+      // Draw Simulated Obstacle & YOLO Bounding Box
+      if (obstacleActive) {
+        const boxX = 260 + Math.sin(t) * 30;
+        const boxY = 190;
+        const boxW = 120;
+        const boxH = 90;
+
+        // Bounding Box
+        ctx.strokeStyle = "#00ffff";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+        // Bounding Box Label
+        ctx.fillStyle = "#00ffff";
+        ctx.fillRect(boxX, boxY - 18, 140, 18);
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 10px monospace";
+        ctx.fillText("HAZARD_ROCK: 0.98", boxX + 4, boxY - 5);
+      }
+
+      // Update Kinematics Telemetry
+      document.getElementById("coxaDeg").innerText = (14.2 + Math.sin(t * 2) * 5).toFixed(1) + "°";
+      document.getElementById("femurDeg").innerText = (48.6 + Math.cos(t * 2) * 8).toFixed(1) + "°";
+      document.getElementById("tibiaDeg").innerText = (92.1 + Math.sin(t * 2 + 1) * 6).toFixed(1) + "°";
+      document.getElementById("pitchDeg").innerText = (Math.sin(t) * 2).toFixed(1) + "°";
+      document.getElementById("rollDeg").innerText = (Math.cos(t) * 1.5).toFixed(1) + "°";
+
+      requestAnimationFrame(renderSimulation);
+    }
+
+    function toggleHazard() {
+      obstacleActive = !obstacleActive;
+      document.getElementById("sonarDist").innerText = obstacleActive ? "45 cm (Warning)" : "220 cm (Clear)";
+    }
+
+    function cycleGait() {
+      gaitIdx = (gaitIdx + 1) % gaits.length;
+      document.getElementById("gaitLabel").innerText = "CURRENT: " + gaits[gaitIdx];
+    }
+
+    renderSimulation();
+  </script>
+</body>
+</html>
